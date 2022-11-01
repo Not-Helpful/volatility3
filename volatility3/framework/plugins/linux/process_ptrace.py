@@ -54,13 +54,14 @@ class Process_ptrace(interfaces.plugins.PluginInterface):
                                             optional=True,
                                             default=False)]
     
-    
+    PT_FLAGS = (
+        ("PTRACED", 0x00001),
+        ("DTRACE", 0x00002),
+        ("SEIZED", 0x10000),
+    )
+
     def run(self):
-        PT_FLAGS = (
-            ("PTRACED", 0x00001),
-            ("DTRACE", 0x00002),
-            ("SEIZED", 0x10000),
-        )
+        
         filter_func = pslist.PsList.create_pid_filter(self.config.get('pid', None))
         
         return renderers.TreeGrid([("Arguments", str),
