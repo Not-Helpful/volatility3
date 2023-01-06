@@ -24,7 +24,6 @@
 @organization:
 """
 
-from py import process
 from volatility3.framework.configuration import requirements
 from volatility3.framework import renderers, interfaces
 from volatility3.plugins.linux import pslist
@@ -60,18 +59,13 @@ class Process_ptrace(interfaces.plugins.PluginInterface):
         ("SEIZED", 0x10000),
     )
 
-    def run(self):
-        
-        filter_func = pslist.PsList.create_pid_filter(self.config.get('pid', None))
-        
-        return renderers.TreeGrid([("Arguments", str),
-                       ("Pid", int),
-                       ("Uid", int),
-                       ("Gid", int)],
-                        self._generator(
-                                      pslist.PsList.list_tasks(self.context,
-                                                               self.config['kernel'],
-                                                               filter_func = filter_func)))
+    def _ptrace_flag_to_text(self, ptrace_flags):
+        flags = []
+        for text, value in self.PT_FLAGS:
+            if ptrace_flags & value != 0:
+                flags.append(text)
+
+        return "|".join(flags)
 
     def get_ptrace_info(self, tasks):
         for task in tasks:
@@ -90,8 +84,8 @@ class Process_ptrace(interfaces.plugins.PluginInterface):
 
             yield task.comm, task.tgid, task.real_parent.tgid, flags, traced_by, tracing
 
-    def _generator(self, procs):
-        for name, pid, ppid, flags, traced_by, tracing in self.get_ptrace_info(procs):
+    def _generator(self, tasks):
+        for name, pid, ppid, flags, traced_by, tracing in self.get_ptrace_info(tasks):
             yield (0, [str(name),
                        int(pid),
                        str(ppid),
@@ -100,3 +94,16 @@ class Process_ptrace(interfaces.plugins.PluginInterface):
                        str(tracing),
                        ]
             )
+
+    def run(self):
+        
+        filter_func = pslist.PsList.create_pid_filter(self.config.get('pid', None))
+        
+        return renderers.TreeGrid([("Arguments", str),
+                       ("Pid", int),
+                       ("Uid", int),
+                       ("Gid", int)],
+                        self._generator(
+                                      pslist.PsList.list_tasks(self.context,
+                                                               self.config['kernel'],
+                                                               filter_func = filter_func)))
