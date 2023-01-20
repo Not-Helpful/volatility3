@@ -47,11 +47,7 @@ class Process_ptrace(interfaces.plugins.PluginInterface):
                                          optional = True),
             requirements.PluginRequirement(name = 'pslist',
                                plugin = pslist.PsList,
-                               version = (2, 1, 0)),
-            requirements.BooleanRequirement(name="threads",
-                                            description="Include user threads",
-                                            optional=True,
-                                            default=False)]
+                               version = (2, 1, 0))]
     
     PT_FLAGS = (
         ("PTRACED", 0x00001),
